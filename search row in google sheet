@@ -1,0 +1,113 @@
+// code.gs
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('WebApp');
+}
+
+function getResultsSQL(type, color, height1, height2){
+
+  var url = '1CfYTALTsSMra30f3avSu0K-FS1SrvpsQBnCupUUWBNE/edit#gid=0';  //Paste URL of GOOGLE SHEET
+  var ss= SpreadsheetApp.openByUrl(url);
+  var webAppSheet2 = ss.getSheetByName("Sheet2");
+  var webAppSheet1 = ss.getSheetByName("Sheet1");
+  var sqlStatement = 'select C, D, E, F where 1 = 1 ';
+  
+  if(Affiliation != '')
+  {
+    sqlStatement += " and C = '"+Affiliation+"' ";
+  }
+
+  if(Country != '')
+  {
+    sqlStatement += " and D = '"+Country+"' ";
+  }
+
+  if(['Given name'] != '')
+  {
+       
+    sqlStatement += " and E = '"+['Given name']+"'  ";
+  }
+
+  if(['Middle name'] != '')
+  {
+       
+    sqlStatement += " and F = '"+['Middle name']+"'  ";
+  }
+  
+  var getLastRow = webAppSheet1.getLastRow(); 
+  var tableRange = 'Sheet1!A1:R'+getLastRow;  
+  var query = '=QUERY('+tableRange+',\"'+sqlStatement+'\")';
+  var setResults = webAppSheet2.getRange(1, 1).setFormula(query); 
+  var getResults = webAppSheet2.getDataRange().getValues();
+
+  return getResults;
+
+}
+
+// WebApp.html
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <base target="_top">
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js" integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o" crossorigin="anonymous"></script>
+         
+        <!--##JAVASCRIPT FUNCTIONS ---------------------------------------------------- -->
+     <script>
+    function GetReport()
+    {
+      var type = document.getElementById("Name title").value;
+      var color = document.getElementById("academic position").value;
+      var height1 = document.getElementById("Given name").value;
+      var height2 = document.getElementById("Middle name").value;
+      
+      google.script.run.withSuccessHandler(function(ar) 
+      {
+      
+      console.log(ar);
+      
+      var displayTable = '';
+      displayTable = '<table border="1" cellpadding="5px" >';
+      
+      ar.forEach(function(item, index) 
+      {   
+        if(index == 0)
+        {
+          displayTable += "<tr>";
+          displayTable += "<th>"+item[0]+"</th>";
+          displayTable += "<th>"+item[1]+"</th>";
+          displayTable += "<th>"+item[2]+"</th>";
+          displayTable += "<th>"+item[3]+"</th>";
+          displayTable += "</tr>";          
+        } 
+        else
+        {
+          displayTable += "<tr>";
+          displayTable += "<td>"+item[0]+"</td>";
+          displayTable += "<td>"+item[1]+"</td>";
+          displayTable += "<td>"+item[2]+"</td>";
+          displayTable += "<td>"+item[3]+"</td>";
+          displayTable += "</tr>";    
+        }
+      });
+      
+      displayTable += '</table>';
+      
+      document.getElementById("dispalyTableHere").innerHTML = displayTable;
+      
+      }).getResultsSQL(['Name title'],['academic position'],['Given name'],['Middle name']);
+    
+    }
+    </script>
+  </head>
+  <body>
+    Type:<input type="text" id="Name title" />
+    Color:<input type="text" id="academic position" />
+    Color:<input type="text" id="Given name" />
+    Color:<input type="text" id="Middle name" />
+   
+    <input type="button" value="Submit" onclick="GetReport()" /><br><br>
+    <div id="dispalyTableHere" ></div>
+  </body>
+</html>
